@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "code2x.h"
+#include "../encoder/code2x.h"
 
 ///
 ///	File:	hexs2std.h: 把十六进制字符数组按8字节补全的实现

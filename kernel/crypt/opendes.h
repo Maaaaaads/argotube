@@ -1,7 +1,7 @@
 #ifndef OPENDES_H
 #define OPENDES_H
-#include "ascs2std.h"
-#include "code2x.h"
+#include "../string/ascs2std.h"
+#include "../encoder/code2x.h"
 ///
 ///	File:	opendes.h:  functions about des encrypt and decrypt
 ///

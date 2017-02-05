@@ -3,8 +3,8 @@
 #include <string.h>
 #include <openssl/des.h>
 
-#include "ascs2std.h"
-#include "code2x.h"
+#include "../string/ascs2std.h"
+#include "../encoder/code2x.h"
 ///
 ///     DES-ECB加密 gcc -Wall -O2 -o openssl_des openssl_des.c ascs2std.c code2x.c -lcrypto
 ///

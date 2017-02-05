@@ -1,5 +1,5 @@
-#include "des.h"
-#include "hexstok.h"
+#include "../crypt/opendes.h"
+#include "../string/hexstok.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,6 +1,6 @@
-#include "../des/code2x.h"
-#include "../des/hexstok.h"
-#include "../des/opendes.h"
+#include "../kernel/encoder/code2x.h"
+#include "../kernel/string/hexstok.h"
+#include "../kernel/crypt/opendes.h"
 #include "hsocket.h"
 
 #include <stdio.h>
