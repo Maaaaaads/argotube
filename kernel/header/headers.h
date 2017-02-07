@@ -10,11 +10,11 @@
  * File :headers.h :IP、TCP首部的自定义函数，以及必要的宏与结构体
  */
 #define PORT 6666
-#define OVER 0xffff
-#define ASK 0x0f0f
-#define CONFIRM 0xf0f0
-#define DECLINE 0xff00
-#define BROKEN 0x00ff
+#define OVER 0xffffffff
+#define ASK 0x00ff00ff
+#define CONFIRM 0xff00ff00
+#define DECLINE 0xffff0000
+#define BROKEN 0x0000ffff
 #define KEY "yourname"
 
 //盐信息长度

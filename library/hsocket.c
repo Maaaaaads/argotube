@@ -134,7 +134,7 @@ void send_t(const char *src_ip,const int src_port, const char *dst_ip,const int 
 	if(!failed)
 	{
         //初始化告知包，返回迷惑信息长度
-		mdata_len = init_hdata("ffff", &hdata, id);
+		mdata_len = init_hdata("ffffffff", &hdata, id);
 	    ip_packet_len = IP_TCP_HEADER_LEN + mdata_len;
 	        
         //填充OVER信息
@@ -190,7 +190,7 @@ void send_t(const char *src_ip,const int src_port, const char *dst_ip,const int 
 	else //如果中间有分片未发送成功，告知目标丢弃此次信息
 	{
         //初始化告知包，返回迷惑信息长度
-        mdata_len = init_hdata("ffff", &hdata, id);
+        mdata_len = init_hdata("ffffffff", &hdata, id);
         ip_packet_len = IP_TCP_HEADER_LEN + mdata_len;
             
         //填充OVER信息
@@ -284,7 +284,7 @@ void print_msg(const char *src_ip, datarray *data)
     t_msg = hexs_to_ascs(hex_msg);
     dec_msg = DES_decrypt(t_msg, KEY);
     //格式化打印
-    printf("%s:%s\n",src_ip, dec_msg);
+    printf("%s:%s\n", src_ip, dec_msg);
     free(t_msg);
     free(dec_msg);
 }
@@ -326,11 +326,15 @@ void listen_msg(const int port)
                 //如果是客户机请求链接的情景
                 if(tcp_header -> seq == ASK)
                 {
+                	memset(src_ip, 0, 20);
+                    //把源IP打印到src_ip缓冲区
+                    snprintf(src_ip, sizeof(src_ip), "%s", inet_ntoa(ip_header -> ip_src));
                     //if(istrusthost(host)),发送CONFIRM信息以确认握手过程
-                    send_back(inet_ntoa(ip_header->ip_dst), ntohs(tcp_header->dest), inet_ntoa(ip_header->ip_src), ntohs(tcp_header->source), CONFIRM);
+                    send_back(inet_ntoa(ip_header->ip_dst), ntohs(tcp_header->dest), src_ip, ntohs(tcp_header->source), CONFIRM);
                 }
                 else if(tcp_header -> seq == OVER)  //信息分片传输完毕的情景
                 {
+                	memset(src_ip, 0, 20);
                     //把源IP打印到src_ip缓冲区
                     snprintf(src_ip, sizeof(src_ip), "%s", inet_ntoa(ip_header -> ip_src));
                     //打印消息
@@ -404,7 +408,7 @@ void send_back(const char *src_ip,const int src_port, const char *dst_ip,const i
 
     //填充目标机器的基本信息
     memset(&dst_addr, 0, sock_addrlen);
-    dst_addr.sin_family = PF_INET;
+    dst_addr.sin_family = AF_INET;
     dst_addr.sin_addr.s_addr = inet_addr(dst_ip);
     dst_addr.sin_port = htons(dst_port);
 
@@ -435,8 +439,8 @@ void send_back(const char *src_ip,const int src_port, const char *dst_ip,const i
         err_exit("tcp_header()");
     }
 
-    mdata_len = init_hdata("ffff", &hdata, id); //此函数初始化隐蔽信息结构体，并且返回产生的迷惑信息的长度
-    ip_packet_len = IP_TCP_HEADER_LEN + mdata_len + 1; //加1加的是最后的结束符
+    mdata_len = init_hdata("ffffffff", &hdata, id); //此函数初始化隐蔽信息结构体，并且返回产生的迷惑信息的长度
+    ip_packet_len = IP_TCP_HEADER_LEN + mdata_len; //加1加的是最后的结束符
 
 
     //填充IP、TCP首部的自定义信息        
@@ -447,7 +451,7 @@ void send_back(const char *src_ip,const int src_port, const char *dst_ip,const i
     memset(msg_buf, 0, ip_packet_len);
     memcpy(msg_buf, ip_header, IP_HEADER_LEN);
     memcpy(msg_buf + IP_HEADER_LEN, tcp_header, TCP_HEADER_LEN);
-    memcpy(msg_buf + IP_TCP_HEADER_LEN, hdata.m_data, mdata_len + 1);
+    memcpy(msg_buf + IP_TCP_HEADER_LEN, hdata.m_data, mdata_len);
     
     //组包完成，调用发送函数
     ret_len = sendto(sockfd, msg_buf, ip_packet_len, 0, (struct sockaddr *)&dst_addr, sock_addrlen);
@@ -529,14 +533,24 @@ int handshake(const char *src_ip,const int src_port, const char *dst_ip,const in
                     if(tcp_header -> seq == CONFIRM)
                     {
                         sprintf(pipe_buf, "%s", "CONFIRM");
-                        write(fd[1], pipe_buf, sizeof(pipe_buf));
+
+                        if(write(fd[1], pipe_buf, sizeof(pipe_buf)) < 0)
+                        {
+                        	err_exit("write():");
+                        }
+
                         close(recvfd);
                         exit(0);
                     }
                     else if(tcp_header -> seq == DECLINE)
                     {
                         sprintf(pipe_buf, "%s", "DECLINE");
-                        write(fd[1], pipe_buf, sizeof(pipe_buf));
+
+                        if(write(fd[1], pipe_buf, sizeof(pipe_buf)) < 0)
+                        {
+                        	err_exit("write():");
+                        }
+
                         close(recvfd);
                         exit(0);
                     }
@@ -586,7 +600,7 @@ int handshake(const char *src_ip,const int src_port, const char *dst_ip,const in
 
         srand((unsigned)time(NULL)); //用时间做种，每次产生随机数不一样
 
-        mdata_len = init_hdata("ffff", &hdata, id);
+        mdata_len = init_hdata("ffffffff", &hdata, id);
         ip_packet_len = IP_TCP_HEADER_LEN + mdata_len;
             
         //装填IP、TCP首部的必要信息，此时为握手信息ASK
@@ -604,7 +618,10 @@ int handshake(const char *src_ip,const int src_port, const char *dst_ip,const in
         if(ret_len > 0)
         {
             //读管道数据
-            read(fd[0],pipe_buf,sizeof(pipe_buf));
+            if(read(fd[0],pipe_buf,sizeof(pipe_buf)) < 0)
+            {
+            	err_exit("read():");
+            }
             
             //失败
             if(!strcmp(pipe_buf, "DECLINE"))
