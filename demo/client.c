@@ -8,7 +8,7 @@ int main(int argc, const char *argv[])
 {
     if (argc != 6)
     {
-        printf("usage:%s src_ip src_port dst_ip dst_port data\n", argv[0]);
+        fprintf(stderr, "usage:%s src_ip src_port dst_ip dst_port data\n", argv[0]);
         exit(1);
     }
     /* 发送ip_tcp报文 */
