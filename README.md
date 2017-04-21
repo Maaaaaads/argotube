@@ -9,7 +9,9 @@ Argotube is a tool to help you transmit information through insivible portion.
 ubuntu
 
 `sudo apt install gcc`
+
 `sudo apt install openssl`
+
 `sudo apt install libssl-dev`
 
 ### Installation
